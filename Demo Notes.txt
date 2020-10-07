@@ -1,0 +1,285 @@
+----------------------------------------------------
+-- Demo 1: Layout Customizing Pt 1: Windows
+----------------------------------------------------
+1.  Open saved PE file
+
+2.  Move random windows around.
+	* Use tabs, stacks, etc.
+	
+3.  OPTIONAL - Note that everything exists within Results tab
+
+4.  Can reset layout by blowing away files:
+%UserProfile%\AppData\Local\SentryOne Plan Explorer
+
+5.  Readjust to show my preference
+	* Plan Diagram to middle
+
+
+----------------------------------------------------
+-- Demo 2: Layout Customizing Pt 2: Columns
+----------------------------------------------------
+1.  Statements Tab 
+	* Introduce dynamic columns like Key Lookups
+
+2.  Show column chooser for Statements
+	* Note some favorites:
+		- Missing Join Predicates
+		- Key Lookups
+		- Missing Indexes
+
+3.  Show column chooser for Top Operations
+
+4.  OPTIONAL: Show column chooser for Plan Tree
+		
+5.  Show how to filter and sort (is often overlooked)
+	* Use Statements
+	* Create a filter on Reads > 10000
+	* Note how to remove ALL filters
+	* Reset sorting
+	
+6.  OPTIONAL: Random tip
+	* Results Tab 
+		- What unit is Compile Time & Duration times in?  Compile time?  Total time?
+		- Miliseconds (divide by 1,000)
+		- But what if I don't remember that?
+		- Use Status Bar at the bottom!
+
+
+
+----------------------------------------------------
+-- Demo 3: Use PE as an IDE
+----------------------------------------------------
+1.  Compare/contrast Text Data tab vs Command Text
+
+2.  Comment out stored proc, add dummy code, & execute
+SELECT * FROM sys.databases;
+	* Look at diagram of sys.databases, LOL!
+	* Discuss "Get Estimated Plan" and "Get Actual Plan"
+	
+3.  Note History tab and use that to go back to prior working example
+	* Leave a comment about goofing around
+
+4.  Note how most folks start from SSMS and are used to Version 1 output
+
+5.  Multi-layer Call Stack
+	* Note that because of multi-layer call stack, you cannot flatten and sort everything
+		- Instead, Collapse All, Expand 1st level, then sort
+
+5.  Recall Aaron Bertrand's quote
+	1. SSMS is for ensuring correct results
+	2. Use PE after, for perf optimization
+
+
+
+----------------------------------------------------
+-- Demo 4: Parallelism
+----------------------------------------------------
+1.  How do you know if a given statement went parallel?
+	* Degree of Parallelism
+	* Parallel Operations
+
+2.  Statements -> Column Chooser -> Add Parallelism Operations 	
+	* Parallel Operations - Operations that WENT parallel
+	* Parallelism Operations - Physical Operations related to Parallelism
+
+3.  Use a filter on Parallelism Operations
+	* Pick 3
+	* Pick a SELECT from sp_DealershipWorkload that has Est Rows > 100
+	
+4.  Top Operations
+	* Sort Operations Column - find all prefixed with Parallelism
+	* Zoom in to show # of Parallelism Operations vs # of Parallel Operations
+
+5.  Is this bad parallelism?
+	* Jump to Plan Tree
+		- Show distribution of records per thread
+	
+	* OPTIONAL: Jump to sp_SalesSummaryByDate
+		- This SELECT has many records but relatively balanced
+
+	* OPTIONAL: Jump to sp_InventoryFlat_Fast_Parallel (Parallelism Op = 1)
+		- That SELECT statement has unbalanced distribution
+
+6.  Should we be going parallel?
+	* Top Operations -> Column Chooser -> Add Estimated Total Subtree Cost
+		- Sort by Est Subtree Cost Percentage to find the "total" Subtree Cost
+		- Compare against tool tip in Plan Diagram to prove it, though the operation differs
+		
+	* OPTIONAL
+		- Find demo.sp_InventoryFlat_Fast_Parallel (Parallelism Op = 1)
+		- Look at Plan Tree & Top Operations
+
+
+----------------------------------------------------
+-- Demo 5: Parameter Sniffing
+----------------------------------------------------
+1.  Remove filter & reset sorting
+
+2.  Scroll to bottom to sp_Get_SalesSummaryByState_GroupByYear
+	* Resize windows to shrink Statement tab
+	
+3.  Explain code
+	* Show Text Data as example!
+
+4.  Show execution metrics - we have a problem
+
+5.  Show Parameters tab
+
+6.  Show Estimated Plan button
+	* Flip back and forth to see problems visually
+
+7.  What is data distribution of the Customers to State?
+	* I don't care!  Real answer is Statistics, because that's what Query Optimizer used
+
+8.  Index Analysis
+	* Find Customer operator
+	* Select Table Column -> State
+	* Show Stats Histogram and Parameters tab
+	* Compare/contrast with first execution
+	
+9.  Missing Index Recommendations
+	* Visible Columns: Other
+	* Density
+	* Last Statistics Update
+	* Predicate
+	
+10. Create missing index recommendation (with other changes)
+	* Copy and re-execute just THAT code in Command Text
+	
+	* Did it fix the problem?  NO - still have parameter sniffing
+	* Use history to compare/contrast I/O and other changes
+	* Rant about applying missing indexes to solve all problems
+	
+11. OPTIONAL: Tipping Point
+	1. Find Workload.sp_RandomVinLookup 
+		(Filter: KeyLookup = 1 | select 2nd one w. 20k reads)
+	* Select Operation: Inventory Index Seek
+	* Select Column: IX_Inventory_VIN_Demo
+	* Note that it Seek -> Key Lookup combination, because estimate is 1
+	* Had value been over tipping point, would have scanned
+	
+	* Adjust the existing Inventory VIN NCI with additional columns to cover!
+	
+	OR
+	
+	2. Find SELECT YEAR(SalesSummary.TransactionDate) AS SalesYear
+		(Filter: KeyLookup = 1 | select w. 235k reads)
+	* Select Operation: Inventory Index Seek
+	* Why is runtime value NULL?
+	* Why is there no range column value highlighted?
+	* Repeated seeks!
+	* Go to plan diagram to see
+	* Can also see from Table I/O # of Scans
+	
+	* Create this covering index and re-execute statement
+	- Copy out of text data
+	
+
+----------------------------------------------------
+-- OPTIONAL
+-- Demo: Live Query Profile
+----------------------------------------------------
+1.  Execute following in Command Text:
+SELECT * FROM vw_AllSoldInventory
+
+2.  Watch plan diagram
+	* Resize Plan Diagram window
+	* Use native zoom
+	
+3.  Stop Query Execution
+
+4.  Join Diagram
+	* Views abstract tables!
+	
+	
+
+
+----------------------------------------------------
+-- OPTIONAL
+-- Demo: User Defined Functions
+----------------------------------------------------
+1.  Execute following in Command Text:
+SELECT TOP 20
+	Inventory.InventoryID,
+	Inventory.VIN,
+	dbo.udf_CalcNetProfit(Inventory.VIN) AS NetProfit,
+	dbo.udf_CalcSalesCommission(Inventory.VIN) AS CommissionPaid
+FROM dbo.Inventory
+INNER JOIN SalesHistory
+	ON SalesHistory.InventoryID = Inventory.InventoryID;
+GO
+
+2.  Add Columns to Statement 
+	* Object Name
+	* Nest Level
+
+3.  No Actual Execution Plan for UDF queries
+
+4.  Re-execute with Get Estimated Plan
+	* SSMS behavior same: will show Estimated Plans for UDF statements but not Actual
+	* But PE can show us the true resource utilization
+	
+
+----------------------------------------------------
+-- OPTIONAL
+-- Demo: Deadlocks
+----------------------------------------------------
+1.  Open X_Deadlocks
+
+2.  Invoke a deadlock
+
+3.  Save out Deadlock XML
+
+4.  Open in Plan Explorer
+
+5.  Typical demo explanation
+
+
+----------------------------------------------------
+-- OPTIONAL
+-- Demo: My Diagnostic Process
+----------------------------------------------------
+1.  Execute following in Command Text:
+EXEC Workload.sp_Get_SalesHistoryByCustomer;
+GO
+
+
+2.  Review Statements results IN ORDER FIRST
+	* nothing jumps out. No "HUGE" query.
+	* A query is the "sum of its parts"
+
+3.  Re-sort or use a filter:
+	* Est Cost % 
+		- note you must use a hard decimal value, so filter by 0.01 to find anything
+	larger than 1%
+
+4.  Point out tons of INSERTs that do a moderate amount of I/O
+	* What is this code doing?  
+	* Show Text Data and explain
+
+5.  Point out Parallel Operations
+	* Any unbalanced parallelism in Plan Tree?
+	
+	* Is this a case where we do NOT want parallelism?  
+		- Look at Top Operations ->Estimated Total Subtree Cost
+
+6.  Point out warning symbol on root operator
+	* Implicit conversions
+
+7.  Point out Missing Indexes
+	* Total of 6, but really there's 2 per duplicate operator
+	* Apply missing index for SalesHistory
+	* Re-execute/Get Actual Plan
+
+8.  Point out Table I/O
+	* Use History to compare to original execution
+	
+9.  Point out Execution Time increased	
+	* Why? Still have key lookups
+
+10. Use Index Analysis again to create NEW NCI that covers
+	* Create index
+	* Re-execute/Get Actual Plan
+	
+	
+

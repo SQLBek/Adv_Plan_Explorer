@@ -1,0 +1,87 @@
+﻿<deadlock>
+  <victim-list>
+    <victimProcess id="process2477567fc28" />
+  </victim-list>
+  <process-list>
+    <process id="process2477567fc28" taskpriority="0" logused="1009652" waitresource="OBJECT: 5:1291867669:0 " waittime="1484" ownerId="231549" transactionname="user_transaction" lasttranstarted="2020-09-30T20:22:44.473" XDES="0x24772184490" lockMode="IS" schedulerid="2" kpid="3980" status="suspended" spid="60" sbid="0" ecid="0" priority="0" trancount="1" lastbatchstarted="2020-09-30T20:22:44.473" lastbatchcompleted="2020-09-30T20:22:44.467" lastattention="1900-01-01T00:00:00.467" clientapp="SQLAgent - TSQL JobStep (Job 0xA938A0332C5F4443A6680122B4B43601 : Step 1)" hostname="HAVOK" hostpid="4116" loginname="XMEN\HAVOK$" isolationlevel="read committed (2)" xactid="231549" currentdb="5" lockTimeout="4294967295" clientoption1="536870944" clientoption2="128056">
+      <executionStack>
+        <frame procname="adhoc" line="8" stmtstart="304" stmtend="396" sqlhandle="0x02000000a1c34c388ec228cb66c4be5725cf9695277611a50000000000000000000000000000000000000000">
+unknown    </frame>
+      </executionStack>
+      <inputbuf>
+-- Customer -&gt; Inventory
+BEGIN TRANSACTION
+	UPDATE deadlock.Customer
+	SET FirstVisit = DATEADD(day, 1, FirstVisit)
+
+	WAITFOR DELAY '00:00:05';
+
+	SELECT *
+	FROM deadlock.Inventory
+	ORDER BY 1
+COMMIT TRANSACTION   </inputbuf>
+    </process>
+    <process id="process247756f44e8" taskpriority="0" logused="1016412" waitresource="OBJECT: 5:1307867726:0 " waittime="1484" ownerId="231544" transactionname="user_transaction" lasttranstarted="2020-09-30T20:22:44.463" XDES="0x247774cc490" lockMode="IS" schedulerid="3" kpid="2864" status="suspended" spid="59" sbid="0" ecid="0" priority="0" trancount="1" lastbatchstarted="2020-09-30T20:22:44.463" lastbatchcompleted="2020-09-30T20:22:44.463" lastattention="1900-01-01T00:00:00.463" clientapp="SQLAgent - TSQL JobStep (Job 0x123C0F46BF2AB5449D680F674E2BECE8 : Step 1)" hostname="HAVOK" hostpid="4116" loginname="XMEN\HAVOK$" isolationlevel="read committed (2)" xactid="231544" currentdb="5" lockTimeout="4294967295" clientoption1="536870944" clientoption2="128056">
+      <executionStack>
+        <frame procname="adhoc" line="8" stmtstart="284" stmtend="382" sqlhandle="0x02000000a7581004ae1d47d8963039cb2cb7d1a4aa7707df0000000000000000000000000000000000000000">
+unknown    </frame>
+      </executionStack>
+      <inputbuf>
+-- Inventory -&gt; SalesHistory
+BEGIN TRANSACTION
+	UPDATE deadlock.Inventory
+	SET TrueCost = TrueCost * 1.1
+
+	WAITFOR DELAY '00:00:05';
+
+	SELECT *
+	FROM deadlock.SalesHistory
+	ORDER BY 1
+COMMIT TRANSACTION   </inputbuf>
+    </process>
+    <process id="process2477567f848" taskpriority="0" logused="1018436" waitresource="OBJECT: 5:1323867783:0 " waittime="1484" ownerId="231547" transactionname="user_transaction" lasttranstarted="2020-09-30T20:22:44.463" XDES="0x24772180490" lockMode="IS" schedulerid="2" kpid="3936" status="suspended" spid="58" sbid="0" ecid="0" priority="0" trancount="1" lastbatchstarted="2020-09-30T20:22:44.463" lastbatchcompleted="2020-09-30T20:22:44.463" lastattention="1900-01-01T00:00:00.463" clientapp="SQLAgent - TSQL JobStep (Job 0xFE7B00F917C63346AC1D070B3E327284 : Step 1)" hostname="HAVOK" hostpid="4116" loginname="XMEN\HAVOK$" isolationlevel="read committed (2)" xactid="231547" currentdb="5" lockTimeout="4294967295" clientoption1="536870944" clientoption2="128056">
+      <executionStack>
+        <frame procname="adhoc" line="8" stmtstart="292" stmtend="382" sqlhandle="0x02000000d573463ae8d9108a890167fcd6239a85e6f1c9710000000000000000000000000000000000000000">
+unknown    </frame>
+      </executionStack>
+      <inputbuf>
+-- SalesHistory -&gt; Customer
+BEGIN TRANSACTION
+	UPDATE deadlock.SalesHistory
+	SET SellPrice = SellPrice * 1.1
+
+	WAITFOR DELAY '00:00:05';
+
+	SELECT *
+	FROM deadlock.Customer
+	ORDER BY 1
+COMMIT TRANSACTION   </inputbuf>
+    </process>
+  </process-list>
+  <resource-list>
+    <objectlock lockPartition="0" objid="1291867669" subresource="FULL" dbid="5" objectname="AutoDealershipDemo.deadlock.Inventory" id="lock24743f31b00" mode="X" associatedObjectId="1291867669">
+      <owner-list>
+        <owner id="process247756f44e8" mode="X" />
+      </owner-list>
+      <waiter-list>
+        <waiter id="process2477567fc28" mode="IS" requestType="wait" />
+      </waiter-list>
+    </objectlock>
+    <objectlock lockPartition="0" objid="1307867726" subresource="FULL" dbid="5" objectname="AutoDealershipDemo.deadlock.SalesHistory" id="lock24743f31480" mode="X" associatedObjectId="1307867726">
+      <owner-list>
+        <owner id="process2477567f848" mode="X" />
+      </owner-list>
+      <waiter-list>
+        <waiter id="process247756f44e8" mode="IS" requestType="wait" />
+      </waiter-list>
+    </objectlock>
+    <objectlock lockPartition="0" objid="1323867783" subresource="FULL" dbid="5" objectname="AutoDealershipDemo.deadlock.Customer" id="lock24743fceb80" mode="X" associatedObjectId="1323867783">
+      <owner-list>
+        <owner id="process2477567fc28" mode="X" />
+      </owner-list>
+      <waiter-list>
+        <waiter id="process2477567f848" mode="IS" requestType="wait" />
+      </waiter-list>
+    </objectlock>
+  </resource-list>
+</deadlock>
